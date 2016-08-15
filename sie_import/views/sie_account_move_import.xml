@@ -7,17 +7,24 @@
 			<field name="arch" type="xml">
 				<form string="SIE Journal Entry Import">
 					<header>
-						<button name="action_import" type="object" string="Import" class="oe_highlight" states="draft"/>
-						<field name="state" widget="statusbar"/>
+						<button id="validate" name="action_import" type="object" string="Validate" class="oe_highlight" states="draft" context="{'validate':True}"/>
+						<button id="import" name="action_import" type="object" string="Import" class="oe_highlight" states="validate" context="{'import':True}"/>
+						<field name="state" widget="statusbar" statusbar_visible="draft,validate,done"/>
 					</header>
 					<sheet>
 						<group string="SIE Journal Entry Import">
 							<label string="Upload SIE format file to Import into Journal Entries" colspan="4"/>
 						</group>
 						<group col="4">
-							<field name="file" filename="filename" attrs="{'invisible': [('state','!=','draft')]}"/>
+							<field name="file" filename="filename" attrs="{'readonly': [('state','!=','draft')]}"/>
 							<field name="date" readonly="1"/>
 							<field name="filename" invisible="1"/>
+						</group>
+						<group string="File Data" attrs="{'invisible': [('state','=','draft')]}" col="4">
+							<field name="company_name" readonly="1"/>
+							<field name="program_name" readonly="1"/>
+							<field name="export_date_char" readonly="1"/>
+							<field name="version" readonly="1"/>
 						</group>
 						<field name="result" readonly="1" colspan="4"/>
 					</sheet>
