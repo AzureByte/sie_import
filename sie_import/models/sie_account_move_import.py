@@ -16,6 +16,7 @@ class sie_account_move_import(models.Model):
 	file = fields.Binary('File', required=True)
 	filename = fields.Char('Filename')
 	journal_id = fields.Many2one('account.journal', 'Journal')
+	reference = fields.Char('Reference')
 	import_id = fields.Many2one('sie.account.move.import', 'Import Reference')
 	date = fields.Datetime('Date', default=datetime.now())
 	move_id = fields.Many2one('account.move', 'Journal Entry', track_visibility='onchange')
@@ -98,7 +99,7 @@ class sie_account_move_import(models.Model):
 					except Exception:
 						result = '<h3 style="color:red">FLAGGA not set correctly.</h3>FLAGGA : %s'%(flag)
 
-				if context and 'validate' in context:
+				if context and 'validate' in context: #Validate Workflow
 					if flag == 0: #new file 
 						#check existing Import reference with same file data:
 						import_ids = self.search([
@@ -114,6 +115,7 @@ class sie_account_move_import(models.Model):
 										'program_name': program,
 										'version': version,
 										'export_date_char': export_date,
+										'reference': ref,
 										'state': 'validate'
 							})
 						else: #file already imported with file data
@@ -139,5 +141,6 @@ class sie_account_move_import(models.Model):
 									'state': 'fail',
 									'result': result
 						})
-
+				else: #Import Workflow
+					print "Import workflow"
 
