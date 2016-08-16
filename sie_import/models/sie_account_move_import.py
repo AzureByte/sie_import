@@ -97,6 +97,13 @@ class sie_account_move_import(models.Model):
 									'state': 'validate'
 						})
 					else:
-						print
+						return self.write({
+									'company_name': company_name,
+									'program_name': program,
+									'version': version,
+									'export_date_char': export_date,
+									'state': 'fail',
+									'result': '<b>FLAGGA is not 0.<b><br/>FLAGGA : %s'%(flag)
+						})
 
 
