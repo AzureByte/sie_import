@@ -17,7 +17,7 @@ class sie_account_move_import(models.Model):
 	journal_id = fields.Many2one('account.journal', 'Journal')
 	date = fields.Datetime('Date', default=fields.Date.today)
 	move_id = fields.Many2one('account.move', 'Journal Entry', track_visibility='onchange')
-	result = fields.Text('Result')
+	result = fields.Html('Result')
 	state = fields.Selection([('draft', 'Draft'), 
 							  ('validate', 'Validated'), 
 							  ('fail', 'Failed'),
