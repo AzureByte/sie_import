@@ -6,6 +6,9 @@ import base64
 import cStringIO
 from datetime import datetime
 
+def format_date(dt):
+	return str(dt[0:4]) + '-' + str(dt[4:6]) + '-' + str(dt[6:8])
+
 class sie_account_move_import(models.Model):
 	_name = "sie.account.move.import"
 	_inherit = ['mail.thread', 'ir.needaction_mixin']
@@ -16,6 +19,7 @@ class sie_account_move_import(models.Model):
 	file = fields.Binary('File', required=True)
 	filename = fields.Char('Filename')
 	journal_id = fields.Many2one('account.journal', 'Journal')
+	move_check = fields.Boolean('Journal Entry Created?')
 	import_id = fields.Many2one('sie.account.move.import', 'Import Reference')
 	date = fields.Datetime('Date', default=datetime.now())
 	result = fields.Html('Result')
@@ -138,7 +142,7 @@ class sie_account_move_import(models.Model):
 										'version': version,
 										'export_date_char': export_date,
 										'state': 'fail',
-										'result': '<h3 style="color:red">File already %s with same "File Data"</h3>'%(status),
+										'result': '<h3 style="color:red">File already %s with similar "File Data"</h3>'%(status),
 										'import_id': import_ids.id
 							})
 						elif not ref:
@@ -162,6 +166,19 @@ class sie_account_move_import(models.Model):
 				else: #Import Workflow
 					print "Import workflow"
 					journal_id = rec.journal_id.id
+					for r in range(0, len(ref)):
+						reference = ref[r]
+						ref_date = refdates[r]
+						dt = format_date(ref_date)
+						dt = datetime.strptime(dt, "%Y-%m-%d").date()
+						move_id = self.env['account.move'].create({
+																	'journal_id': journal_id,
+																	'date': dt,
+																	'ref': reference
+												})
+						result = '<h3 style="color:blue">Import Successful! Journal Entries created.</h3>'
+						self.env['sie.account.move.line'].create({'import_id': rec.id, 'move_id': move_id.id})
+						self.write({'result': result, 'move_check': True})
 
 					
 

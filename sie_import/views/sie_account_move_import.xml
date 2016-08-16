@@ -30,6 +30,17 @@
 						<group string="Result" attrs="{'invisible':[('result','=',False)]}">
 							<field name="result" readonly="1" colspan="4" attrs="{'invisible':[('result','=',False)]}" nolabel="1"/>
 							<field name="import_id" readonly="1" attrs="{'invisible':[('import_id','=',False)]}"/>
+							<field name="trans_line" readonly="1" attrs="{'invisible':[('move_check','=',False)]}" colspan="4">
+								<tree string="Journal Entries">
+									<field name="move_id"/>
+								</tree>
+								<form string="Journal Entry">
+									<group>
+										<field name="move_id"/>
+									</group>
+								</form>
+							</field>
+							<field name="move_check" invisible="1"/>
 						</group>
 					</sheet>
 					<div class="oe_chatter">
