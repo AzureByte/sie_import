@@ -4,6 +4,7 @@ import time
 from openerp.exceptions import ValidationError
 import base64
 import cStringIO
+from datetime import datetime
 
 class sie_account_move_import(models.Model):
 	_name = "sie.account.move.import"
@@ -15,7 +16,8 @@ class sie_account_move_import(models.Model):
 	file = fields.Binary('File', required=True)
 	filename = fields.Char('Filename')
 	journal_id = fields.Many2one('account.journal', 'Journal')
-	date = fields.Datetime('Date', default=fields.Date.today)
+	import_id = fields.Many2one('sie.account.move.import', 'Import Reference')
+	date = fields.Datetime('Date', default=datetime.now())
 	move_id = fields.Many2one('account.move', 'Journal Entry', track_visibility='onchange')
 	result = fields.Html('Result')
 	state = fields.Selection([('draft', 'Draft'), 
@@ -87,23 +89,55 @@ class sie_account_move_import(models.Model):
 
 					if 'TRANS' in res or 'trans' in res:
 						trans.append(res)
+
+				if not flag:
+					result = '<h3 style="color:red">FLAGGA not set correctly.</h3>FLAGGA : %s'%(flag)
+				elif flag:
+					try:
+						flag = int(flag.strip())
+					except Exception:
+						result = '<h3 style="color:red">FLAGGA not set correctly.</h3>FLAGGA : %s'%(flag)
+
 				if context and 'validate' in context:
-					if int(flag.strip()) == 0:
-						return self.write({
-									'company_name': company_name,
-									'program_name': program,
-									'version': version,
-									'export_date_char': export_date,
-									'state': 'validate'
-						})
-					else:
+					if flag == 0: #new file 
+						#check existing Import reference with same file data:
+						import_ids = self.search([
+										('company_name','=',company_name),
+										('program_name','=',program),
+										('version','=',version),	
+										('export_date_char','=',export_date),
+										('state', 'in', ('validate','done'))
+									])
+						if not import_ids:
+							return self.write({
+										'company_name': company_name,
+										'program_name': program,
+										'version': version,
+										'export_date_char': export_date,
+										'state': 'validate'
+							})
+						else: #file already imported with file data
+							if import_ids.state == 'validate':
+								status = 'Validated'
+							elif import_ids.state == 'done':
+								status = 'Imported'
+							return self.write({
+										'company_name': company_name,
+										'program_name': program,
+										'version': version,
+										'export_date_char': export_date,
+										'state': 'fail',
+										'result': '<h3 style="color:red">File already %s with same "File Data"</h3>'%(status),
+										'import_id': import_ids.id
+							})
+					else: #flag not set correctly
 						return self.write({
 									'company_name': company_name,
 									'program_name': program,
 									'version': version,
 									'export_date_char': export_date,
 									'state': 'fail',
-									'result': '<b>FLAGGA is not 0.<b><br/>FLAGGA : %s'%(flag)
+									'result': result
 						})
 
 
