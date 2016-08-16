@@ -16,11 +16,10 @@ class sie_account_move_import(models.Model):
 	file = fields.Binary('File', required=True)
 	filename = fields.Char('Filename')
 	journal_id = fields.Many2one('account.journal', 'Journal')
-	reference = fields.Char('Reference')
 	import_id = fields.Many2one('sie.account.move.import', 'Import Reference')
 	date = fields.Datetime('Date', default=datetime.now())
-	move_id = fields.Many2one('account.move', 'Journal Entry', track_visibility='onchange')
 	result = fields.Html('Result')
+	trans_line = fields.One2many('sie.account.move.line', 'import_id', 'Journal Entries')
 	state = fields.Selection([('draft', 'Draft'), 
 							  ('validate', 'Validated'), 
 							  ('fail', 'Failed'),
@@ -50,8 +49,10 @@ class sie_account_move_import(models.Model):
 					result.append(d.replace('#',''))
 				print result
 				flag = 0
-				ref, fformat, ttype, company_name, program, version, export_date = None, None, None, None, None, None, None
-				trans = []
+				fformat, ttype, company_name, program, version, export_date = None, None, None, None, None, None
+				ref, refdates, trans = [], [], {}
+				refcount = 0
+				
 				for res in result:
 					if len(res.split('FLAGGA')) > 1:
 						flag = res.split('FLAGGA')[1]
@@ -81,15 +82,24 @@ class sie_account_move_import(models.Model):
 						export_date = res.split('GEN')[1].split('"')[0]
 
 					if len(res.split('VER')) > 1:
-						ref = res.split('VER')[1]
-						i = [i for i,x in enumerate(ref) if x == '"']
+						ver = res.split('VER')[1]
+						i = [i for i,x in enumerate(ver) if x == '"']
 						if i: 
+							refcount = refcount + 1
+							#get VER Reference:
 							start = i[len(i)-2]+1
 							stop = i[len(i)-1]
-							ref = ref[start:stop]
-
+							ref.append(ver[start:stop])
+							#get VER Date:
+							stop = start - 1
+							start = i[len(i)-3]+1
+							refdates.append(ver[start:stop].replace(' ', ''))
+							
 					if 'TRANS' in res or 'trans' in res:
-						trans.append(res)
+						if ref[refcount-1] not in trans.keys():
+							trans[ref[refcount-1]] = []
+						else:
+							trans[ref[refcount-1]].append(res)
 
 				if not flag:
 					result = '<h3 style="color:red">FLAGGA not set correctly.</h3>FLAGGA : %s'%(flag)
@@ -109,16 +119,15 @@ class sie_account_move_import(models.Model):
 										('export_date_char','=',export_date),
 										('state', 'in', ('validate','done'))
 									])
-						if not import_ids:
+						if not import_ids and ref:
 							return self.write({
 										'company_name': company_name,
 										'program_name': program,
 										'version': version,
 										'export_date_char': export_date,
-										'reference': ref,
 										'state': 'validate'
 							})
-						else: #file already imported with file data
+						elif import_ids and ref: #file already imported with file data
 							if import_ids.state == 'validate':
 								status = 'Validated'
 							elif import_ids.state == 'done':
@@ -132,6 +141,15 @@ class sie_account_move_import(models.Model):
 										'result': '<h3 style="color:red">File already %s with same "File Data"</h3>'%(status),
 										'import_id': import_ids.id
 							})
+						elif not ref:
+							return self.write({
+										'company_name': company_name,
+										'program_name': program,
+										'version': version,
+										'export_date_char': export_date,
+										'state': 'fail',
+										'result': '<h3 style="color:red">Journal Entries are missing for Import!</h3>',
+							})
 					else: #flag not set correctly
 						return self.write({
 									'company_name': company_name,
@@ -143,4 +161,14 @@ class sie_account_move_import(models.Model):
 						})
 				else: #Import Workflow
 					print "Import workflow"
+					journal_id = rec.journal_id.id
+
+					
+
+class sie_account_move_line(models.Model):
+	_name = "sie.account.move.line"
+	_description = "SIE Journal Entries"
+
+	import_id = fields.Many2one('sie.account.move.import', 'Import Ref')
+	move_id = fields.Many2one('account.move', 'Journal Entry')
 
