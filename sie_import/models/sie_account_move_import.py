@@ -14,6 +14,7 @@ class sie_account_move_import(models.Model):
 
 	file = fields.Binary('File', required=True)
 	filename = fields.Char('Filename')
+	journal_id = fields.Many2one('account.journal', 'Journal')
 	date = fields.Datetime('Date', default=fields.Date.today)
 	move_id = fields.Many2one('account.move', 'Journal Entry', track_visibility='onchange')
 	result = fields.Text('Result')
@@ -46,8 +47,8 @@ class sie_account_move_import(models.Model):
 					result.append(d.replace('#',''))
 				print result
 				flag = 0
-				fformat, ttype, company_name, program, version, export_date = None, None, None, None, None, None
-				ref = ''
+				ref, fformat, ttype, company_name, program, version, export_date = None, None, None, None, None, None, None
+				trans = []
 				for res in result:
 					if len(res.split('FLAGGA')) > 1:
 						flag = res.split('FLAGGA')[1]
@@ -84,9 +85,12 @@ class sie_account_move_import(models.Model):
 							stop = i[len(i)-1]
 							ref = ref[start:stop]
 
+					if 'TRANS' in res or 'trans' in res:
+						trans.append(res)
 				if context and 'validate' in context:
 					if int(flag.strip()) == 0:
-						return self.write({'company_name': company_name,
+						return self.write({
+									'company_name': company_name,
 									'program_name': program,
 									'version': version,
 									'export_date_char': export_date,
