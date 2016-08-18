@@ -37,6 +37,7 @@ This module provides functionality to import Journal Enrtries from SIE format fi
     'depends': ['account'],
     'data': [
         'views/sie_account_move_import.xml',
+        'security/ir.model.access.csv',
     ],
     'installable': True,
     'auto_install': False,
