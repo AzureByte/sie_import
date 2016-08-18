@@ -112,6 +112,8 @@ class sie_account_move_import(models.Model):
 				elif flag:
 					try:
 						flag = int(flag.strip())
+						if flag != 0:
+							result = '<h3 style="color:red">FLAGGA not set correctly.</h3>FLAGGA : %s'%(flag)
 					except Exception:
 						result = '<h3 style="color:red">FLAGGA not set correctly.</h3>FLAGGA : %s'%(flag)
 
