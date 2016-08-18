@@ -25,7 +25,12 @@
     'category': 'Accounting',
     'summary': 'SIE Journal Entries Import',
     'description': """
-        This module provides functionality to import Journal Enrtries from SIE format files.
+==============================================================================
+                        SIE Journal Entries Import
+==============================================================================
+This module provides functionality to import Journal Enrtries from SIE format files.
+
+* Menu : Accounting / Adviser / SIE Import
     """,
     'author': 'Linserv Aktiebolag',
     'website': 'http://www.linserv.se',
