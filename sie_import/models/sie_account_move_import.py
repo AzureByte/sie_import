@@ -51,9 +51,10 @@ class sie_account_move_import(models.Model):
 				data = data.split('\r\n')
 				for d in data:
 					result.append(d.replace('#',''))
-				print result
+
 				flag = 0
 				fformat, ttype, company_name, program, version, export_date = None, None, None, None, None, None
+				export_dt = False
 				ref, refdates, trans = [], [], {}
 				refcount = 0
 				
@@ -83,7 +84,8 @@ class sie_account_move_import(models.Model):
 							program = program.split(version)[0]
 
 					if len(res.split('GEN')) > 1:
-						export_date = res.split('GEN')[1].split('"')[0]
+						export_date = res.split('GEN')[1].split('"')[0].replace(' ', '')
+						export_dt = format_date(export_date)
 
 					if len(res.split('VER')) > 1:
 						ver = res.split('VER')[1]
@@ -101,10 +103,10 @@ class sie_account_move_import(models.Model):
 							
 					if 'TRANS' in res or 'trans' in res:
 						if ref[refcount-1] not in trans.keys():
-							trans[ref[refcount-1]] = []
+							trans[ref[refcount-1]] = [res]
 						else:
 							trans[ref[refcount-1]].append(res)
-
+				result = ''
 				if not flag:
 					result = '<h3 style="color:red">FLAGGA not set correctly.</h3>FLAGGA : %s'%(flag)
 				elif flag:
@@ -129,6 +131,7 @@ class sie_account_move_import(models.Model):
 										'program_name': program,
 										'version': version,
 										'export_date_char': export_date,
+										'export_date': export_dt,
 										'state': 'validate'
 							})
 						elif import_ids and ref: #file already imported with file data
@@ -141,6 +144,7 @@ class sie_account_move_import(models.Model):
 										'program_name': program,
 										'version': version,
 										'export_date_char': export_date,
+										'export_date': export_dt,
 										'state': 'fail',
 										'result': '<h3 style="color:red">File already %s with similar "File Data"</h3>'%(status),
 										'import_id': import_ids.id
@@ -151,6 +155,7 @@ class sie_account_move_import(models.Model):
 										'program_name': program,
 										'version': version,
 										'export_date_char': export_date,
+										'export_date': export_dt,
 										'state': 'fail',
 										'result': '<h3 style="color:red">Journal Entries are missing for Import!</h3>',
 							})
@@ -160,25 +165,105 @@ class sie_account_move_import(models.Model):
 									'program_name': program,
 									'version': version,
 									'export_date_char': export_date,
+									'export_date': export_dt,
 									'state': 'fail',
 									'result': result
 						})
 				else: #Import Workflow
-					print "Import workflow"
 					journal_id = rec.journal_id.id
-					for r in range(0, len(ref)):
-						reference = ref[r]
-						ref_date = refdates[r]
-						dt = format_date(ref_date)
-						dt = datetime.strptime(dt, "%Y-%m-%d").date()
-						move_id = self.env['account.move'].create({
-																	'journal_id': journal_id,
-																	'date': dt,
-																	'ref': reference
-												})
-						result = '<h3 style="color:blue">Import Successful! Journal Entries created.</h3>'
-						self.env['sie.account.move.line'].create({'import_id': rec.id, 'move_id': move_id.id})
-						self.write({'result': result, 'move_check': True})
+					count = 0
+					no_account_ref_flag = False
+					no_account_ref = '<h3 style="color:red">Some Journal Items were not created!</h3>Account(s) not found with Code :<br/>'
+					unbalanced_ref_check = False
+					unbalanced_ref = '<h3 style="color:red">Some Journal Entries were not created as they are Unbalanced.</h3><b>Reference(s) :</b><br/>'
+					
+					flag = False
+					try:
+						for r in range(0, len(ref)):
+							#construct Journal Entry
+							reference = ref[r]
+							ref_date = refdates[r]
+							dt = format_date(ref_date)
+							dt = datetime.strptime(dt, "%Y-%m-%d").date()
+
+							#compute & create Journal Items:
+							lines = []
+							for line in trans[reference]:
+								transaction = line.split('TRANS')[1]
+								code = transaction.split('{')[0].replace(' ', '')
+								account = self.env['account.account'].search([('code','=',code)])
+								account_id = False
+								if account: account_id = account.id
+
+								amount = transaction.split('}')[1].split('"')[0].replace(' ', '')
+								amount = float(amount)
+								credit, debit = 0.0, 0.0
+								if amount > 0:
+									debit = amount
+								else:
+									credit = abs(amount)
+
+								fstart = [i for i,x in enumerate(transaction) if x == '{']
+								fend = [i for i,x in enumerate(transaction) if x == '}']
+								move_name = '/'
+								if fstart and fend:
+									move_name = transaction[fstart[0]+1:fend[0]]
+								if not move_name:
+									move_name = '/'
+								#construct Journal Items:
+								if account_id:
+									move_line = [0, False, {
+										'account_id': account_id,
+										'credit': credit,
+										'debit': debit,
+										'name': move_name
+									}]
+									lines.append(move_line)
+								else:
+									no_account_ref_flag = True
+									no_account_ref = no_account_ref + code + '<br/>'
+
+							#Validate Journal Items to check if it is Unbalanced:
+							unbalanced = False
+							move_credit, move_debit = 0, 0
+							for l in lines:
+								l = l[2]
+								move_credit = move_credit + l['credit']
+								move_debit = move_debit + l['debit']
+							if move_credit != move_debit:
+								unbalanced = True
+
+							#Update Journal Items in Journal Entry:
+							if not unbalanced:
+								count = count + 1
+								move_id = self.env['account.move'].create({
+																			'journal_id': journal_id,
+																			'date': dt,
+																			'ref': reference
+														})
+								self.env['sie.account.move.line'].create({'import_id': rec.id, 'move_id': move_id.id})
+								move_id.write({'line_ids': lines})
+							else:
+								unbalanced_ref_check = True
+								unbalanced_ref = unbalanced_ref + reference + '<br/>'
+					except Exception, e:
+						flag = True
+						exception = e
+
+					if not flag: #no exception processing TRANS
+						if count:
+							result = '<h3 style="color:blue">Import Successful! Journal Entries created.</h3>'
+						if unbalanced_ref_check:
+							result = result + unbalanced_ref
+						if no_account_ref_flag:
+							result = result + no_account_ref
+						if count: #at least one Journal Entry Imported
+							self.write({'result': result, 'move_check': True, 'state': 'done'})
+						else:
+							self.write({'result': result, 'state': 'fail'})
+					else:
+						result = '''<h3 style="color:red">Failed! Journal Entry creation Failed.</h3><b>Error: </b>%s'''%(exception)
+						self.write({'result': result, 'state': 'fail'})
 
 					
 
