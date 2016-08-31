@@ -36,6 +36,11 @@ class sie_account_move_import(models.Model):
 	export_date_char = fields.Char('Export Date')
 	export_date = fields.Date('Export Date')
 
+	@api.one
+	def set_draft(self):
+		for rec in self:
+			return self.write({'state': 'draft', 'result': None, 'move_check':False})
+
 	@api.multi
 	def action_import(self):
 		context = self._context

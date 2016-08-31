@@ -9,6 +9,7 @@
 					<header>
 						<button id="validate" name="action_import" type="object" string="Validate" class="oe_highlight" states="draft" context="{'validate':True}"/>
 						<button id="import" name="action_import" type="object" string="Import" class="oe_highlight" states="validate" context="{'import':True}"/>
+						<button name="set_draft" type="object" string="Set To Draft" states="fail"/>
 						<field name="state" widget="statusbar" statusbar_visible="draft,validate,done"/>
 					</header>
 					<sheet>
