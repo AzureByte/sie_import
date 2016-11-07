@@ -237,7 +237,7 @@ class sie_account_move_import(models.Model):
 								l = l[2]
 								move_credit = move_credit + l['credit']
 								move_debit = move_debit + l['debit']
-							if move_credit != move_debit:
+							if round(move_credit,6) != round(move_debit,6):
 								unbalanced = True
 
 							#Update Journal Items in Journal Entry:
