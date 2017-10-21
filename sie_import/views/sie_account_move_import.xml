@@ -1,105 +1,105 @@
 <openerp>
-	<data>
+    <data>
 
-		<record id="sie_account_move_import_form" model="ir.ui.view">
-			<field name="name">sie.account.move.import.form</field>
-			<field name="model">sie.account.move.import</field>
-			<field name="arch" type="xml">
-				<form string="SIE Journal Entry Import">
-					<header>
-						<button id="validate" name="action_import" type="object" string="Validate" class="oe_highlight" states="draft" context="{'validate':True}"/>
-						<button id="import" name="action_import" type="object" string="Import" class="oe_highlight" states="validate" context="{'import':True}"/>
-						<button name="set_draft" type="object" string="Set To Draft" states="fail"/>
-						<field name="state" widget="statusbar" statusbar_visible="draft,validate,done"/>
-					</header>
-					<sheet>
-						<group string="SIE Journal Entry Import">
-							<label string="Upload SIE format file to Import into Journal Entries" colspan="4"/>
-						</group>
-						<group col="4">
-							<field name="file" filename="filename" attrs="{'readonly': [('state','!=','draft')]}"/>
-							<field name="date" readonly="1"/>
-							<field name="journal_id" attrs="{'required': [('state','=','validate')], 'invisible':[('state','not in',('validate','done'))], 'readonly':[('state','!=','validate')]}" widget="selection"/>
-							<field name="filename" invisible="1"/>
-						</group>
-						<group string="File Data" attrs="{'invisible': [('state','=','draft')]}" col="4">
-							<group col="2">
-								<field name="company_name" readonly="1"/>
-								<field name="export_date" readonly="1"/>
-								<field name="export_date_char" readonly="1" string="Export Date (Plain)"/>
-							</group>
-							<group col="2">
-								<field name="program_name" readonly="1"/>
-								<field name="version" readonly="1"/>
-							</group>
-						</group>
-						<group string="Result" attrs="{'invisible':[('result','=',False)]}">
-							<field name="result" readonly="1" colspan="4" attrs="{'invisible':[('result','=',False)]}" nolabel="1"/>
-							<field name="import_id" readonly="1" attrs="{'invisible':[('import_id','=',False)]}"/>
-							<field name="trans_line" readonly="1" attrs="{'invisible':[('move_check','=',False)]}" colspan="4">
-								<tree string="Journal Entries">
-									<field name="move_id"/>
-								</tree>
-								<form string="Journal Entry">
-									<group>
-										<field name="move_id"/>
-									</group>
-								</form>
-							</field>
-							<field name="move_check" invisible="1"/>
-						</group>
-					</sheet>
-					<div class="oe_chatter">
-						<field name="message_follower_ids" widget="mail_followers"/>
-						<field name="message_ids" widget="mail_thread"/>
-					</div>
-				</form>
-			</field>
-		</record>
+        <record id="sie_account_move_import_form" model="ir.ui.view">
+            <field name="name">sie.account.move.import.form</field>
+            <field name="model">sie.account.move.import</field>
+            <field name="arch" type="xml">
+                <form string="SIE Journal Entry Import">
+                    <header>
+                        <button id="validate" name="action_import" type="object" string="Validate" class="oe_highlight" states="draft" context="{'validate':True}"/>
+                        <button id="import" name="action_import" type="object" string="Import" class="oe_highlight" states="validate" context="{'import':True}"/>
+                        <button name="set_draft" type="object" string="Set To Draft" states="fail"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,validate,done"/>
+                    </header>
+                    <sheet>
+                        <group string="SIE Journal Entry Import">
+                            <label string="Upload SIE format file to Import into Journal Entries" colspan="4"/>
+                        </group>
+                        <group col="4">
+                            <field name="file" filename="filename" attrs="{'readonly': [('state','!=','draft')]}"/>
+                            <field name="date" readonly="1"/>
+                            <field name="journal_id" attrs="{'required': [('state','=','validate')], 'invisible':[('state','not in',('validate','done'))], 'readonly':[('state','!=','validate')]}" widget="selection"/>
+                            <field name="filename" invisible="1"/>
+                        </group>
+                        <group string="File Data" attrs="{'invisible': [('state','=','draft')]}" col="4">
+                            <group col="2">
+                                <field name="company_name" readonly="1"/>
+                                <field name="export_date" readonly="1"/>
+                                <field name="export_date_char" readonly="1" string="Export Date (Plain)"/>
+                            </group>
+                            <group col="2">
+                                <field name="program_name" readonly="1"/>
+                                <field name="version" readonly="1"/>
+                            </group>
+                        </group>
+                        <group string="Result" attrs="{'invisible':[('result','=',False)]}">
+                            <field name="result" readonly="1" colspan="4" attrs="{'invisible':[('result','=',False)]}" nolabel="1"/>
+                            <field name="import_id" readonly="1" attrs="{'invisible':[('import_id','=',False)]}"/>
+                            <field name="trans_line" readonly="1" attrs="{'invisible':[('move_check','=',False)]}" colspan="4">
+                                <tree string="Journal Entries">
+                                    <field name="move_id"/>
+                                </tree>
+                                <form string="Journal Entry">
+                                    <group>
+                                        <field name="move_id"/>
+                                    </group>
+                                </form>
+                            </field>
+                            <field name="move_check" invisible="1"/>
+                        </group>
+                    </sheet>
+                    <div class="oe_chatter">
+                        <field name="message_follower_ids" widget="mail_followers"/>
+                        <field name="message_ids" widget="mail_thread"/>
+                    </div>
+                </form>
+            </field>
+        </record>
 
-		<record id="sie_account_move_import_tree" model="ir.ui.view">
-			<field name="name">sie.account.move.import.tree</field>
-			<field name="model">sie.account.move.import</field>
-			<field name="arch" type="xml">
-				<tree string="SIE Journal Entry Import" colors="grey:state=='done'">
-					<field name="filename"/>
-					<field name="date"/>
-					<field name="state"/>
-				</tree>
-			</field>
-		</record>
+        <record id="sie_account_move_import_tree" model="ir.ui.view">
+            <field name="name">sie.account.move.import.tree</field>
+            <field name="model">sie.account.move.import</field>
+            <field name="arch" type="xml">
+                <tree string="SIE Journal Entry Import" colors="grey:state=='done'">
+                    <field name="filename"/>
+                    <field name="date"/>
+                    <field name="state"/>
+                </tree>
+            </field>
+        </record>
 
-		<record id="sie_account_move_import_search" model="ir.ui.view">
-			<field name="name">sie.account.move.import.search</field>
-			<field name="model">sie.account.move.import</field>
-			<field name="arch" type="xml">
-				<search string="SIE Journal Entry Import">
-					<field name="filename"/>
-					<field name="date"/>
-					<field name="state"/>
-					<filter string="This Month" name="month" domain="[('date','&lt;=', time.strftime('%Y-%m-%d')),('date','&gt;=',time.strftime('%Y-%m-01'))]"/>
-					<newline/>
-					<filter name="groupby_state" string="State" domain="[]" context="{'group_by': 'state'}"/>
-				</search>
-			</field>
-		</record>
+        <record id="sie_account_move_import_search" model="ir.ui.view">
+            <field name="name">sie.account.move.import.search</field>
+            <field name="model">sie.account.move.import</field>
+            <field name="arch" type="xml">
+                <search string="SIE Journal Entry Import">
+                    <field name="filename"/>
+                    <field name="date"/>
+                    <field name="state"/>
+                    <filter string="This Month" name="month" domain="[('date','&lt;=', time.strftime('%Y-%m-%d')),('date','&gt;=',time.strftime('%Y-%m-01'))]"/>
+                    <newline/>
+                    <filter name="groupby_state" string="State" domain="[]" context="{'group_by': 'state'}"/>
+                </search>
+            </field>
+        </record>
 
-		<record id="sie_account_move_import_action" model="ir.actions.act_window">
-			<field name="name">SIE Import</field>
-			<field name="res_model">sie.account.move.import</field>
-			<field name="view_type">form</field>
-			<field name="view_mode">tree,form</field>
-			<field name="help" type="html">
-				<p class="oe_view_nocontent_create">Click create to Import Journal Entries from SIE Files.</p>
-			</field>
-		</record>
+        <record id="sie_account_move_import_action" model="ir.actions.act_window">
+            <field name="name">SIE Import</field>
+            <field name="res_model">sie.account.move.import</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p class="oe_view_nocontent_create">Click create to Import Journal Entries from SIE Files.</p>
+            </field>
+        </record>
 
-		<!-- Menuitem -->
-		<menuitem id="menu_sie_account_move_import"
-			parent="account.menu_finance_entries"
-			groups="account.group_account_manager"
-			action="sie_account_move_import_action"
-			sequence="3"/>
+        <!-- Menuitem -->
+        <menuitem id="menu_sie_account_move_import"
+            parent="account.menu_finance_entries"
+            groups="account.group_account_manager"
+            action="sie_account_move_import_action"
+            sequence="3"/>
 
-	</data>
+    </data>
 </openerp>
